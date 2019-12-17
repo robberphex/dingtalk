@@ -20,6 +20,14 @@ const APPLICATION_JSON_UTF8: &str = "application/json; charset=utf-8";
 
 const DEFAULT_DINGTALK_ROBOT_URL: &str = "https://oapi.dingtalk.com/robot/send?access_token=";
 
+/// `DingTalk` is a simple SDK for DingTalk webhook robot
+/// Document https://ding-doc.dingtalk.com/doc#/serverapi2/qf2nxq
+/// 
+/// Sample code:
+/// ```
+/// let dt = DingTalk::new("<token>", "");
+/// dt.send_text("Hello world!")?;
+/// ```
 pub struct DingTalk<'a> {
     pub access_token: &'a str,
     pub sec_token: &'a str,
@@ -27,6 +35,8 @@ pub struct DingTalk<'a> {
 
 impl <'a> DingTalk<'a> {
 
+    /// Create `DingTalk`
+    /// `access_token` is access token, `sec_token` can be empty `""`
     pub fn new(access_token: &'a str, sec_token: &'a str) -> Self {
         DingTalk {
             access_token: access_token,
@@ -34,6 +44,7 @@ impl <'a> DingTalk<'a> {
         }
     }
 
+    /// Send text message
     pub fn send_text(&self, text_message: &str) -> Result<(), Box<dyn std::error::Error>> {
         self.send(&json::stringify(object!{
             "msgtype" => "text",
@@ -43,6 +54,7 @@ impl <'a> DingTalk<'a> {
         }))
     }
 
+    /// Send markdown message
     pub fn send_markdown(&self, title: &str, text: &str) -> Result<(), Box<dyn std::error::Error>> {
         self.send(&json::stringify(object!{
             "msgtype" => "markdown",
@@ -53,6 +65,7 @@ impl <'a> DingTalk<'a> {
         }))
     }
 
+    /// Direct send JSON message
     pub fn send(&self, json_message: &str) -> Result<(), Box<dyn std::error::Error>> {
         let client = reqwest::Client::new();
         let response = client.post(&self.generate_signed_url())
@@ -66,6 +79,7 @@ impl <'a> DingTalk<'a> {
         }
     }
 
+    /// Generate signed dingtalk webhook URL
     pub fn generate_signed_url(&self) -> String {
         let mut signed_url = String::with_capacity(1024);
         signed_url.push_str(DEFAULT_DINGTALK_ROBOT_URL);
