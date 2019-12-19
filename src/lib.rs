@@ -28,9 +28,86 @@ const DEFAULT_DINGTALK_ROBOT_URL: &str = "https://oapi.dingtalk.com/robot/send?a
 /// let dt = DingTalk::new("<token>", "");
 /// dt.send_text("Hello world!")?;
 /// ```
+/// 
+/// At all sample:
+/// ```
+/// dt.send_message(&DingTalkMessage::new_text("Hello World!").at_all())?;
+/// ```
 pub struct DingTalk<'a> {
     pub access_token: &'a str,
     pub sec_token: &'a str,
+}
+
+/// DingTalk message type
+/// * TEXT - text message
+/// * MARKDONW - markdown message
+#[derive(Clone, Copy, Debug)]
+pub enum DingTalkMessageType {
+    TEXT,
+    // LINK,
+    MARKDOWN,
+}
+
+/// DingTalk message
+pub struct DingTalkMessage<'a> {
+    pub message_type: DingTalkMessageType,
+    pub text_content: &'a str,
+    pub markdown_title: &'a str,
+    pub markdown_content: &'a str,
+    pub at_all: bool,
+    pub at_mobiles: Vec<String>,
+}
+
+impl <'a> DingTalkMessage<'a> {
+
+    /// New text DingTalk message
+    pub fn new_text(text_content: &'a str) -> Self {
+        Self::new(DingTalkMessageType::TEXT).text(text_content)
+    }
+
+    /// New markdown DingTalk message
+    pub fn new_markdown(markdown_title: &'a str, markdown_content: &'a str) -> Self {
+        Self::new(DingTalkMessageType::MARKDOWN).markdown(markdown_title, markdown_content)
+    }
+    
+    /// New DingTalk message
+    pub fn new(message_type: DingTalkMessageType) -> Self {
+        DingTalkMessage {
+            message_type: message_type,
+            text_content: "",
+            markdown_title: "",
+            markdown_content: "",
+            at_all: false,
+            at_mobiles: vec![],
+        }
+    }
+
+    /// Set text
+    pub fn text(mut self, text_content: &'a str) -> Self {
+        self.text_content = text_content;
+        self
+    }
+
+    /// Set markdown
+    pub fn markdown(mut self, markdown_title: &'a str, markdown_content: &'a str) -> Self {
+        self.markdown_title = markdown_title;
+        self.markdown_content = markdown_content;
+        self
+    }
+
+    // At all
+    pub fn at_all(mut self) -> Self {
+        self.at_all = true;
+        self
+    }
+
+    // At mobiles
+    pub fn at_mobiles(mut self, mobiles: &Vec<String>) -> Self {
+        for m in mobiles {
+            self.at_mobiles.push(m.clone());
+        }
+        self
+    }
 }
 
 impl <'a> DingTalk<'a> {
@@ -44,25 +121,43 @@ impl <'a> DingTalk<'a> {
         }
     }
 
+    pub fn send_message(&self, dingtalk_message: &DingTalkMessage) -> Result<(), Box<dyn std::error::Error>> {
+        let mut message_json = match dingtalk_message.message_type {
+            DingTalkMessageType::TEXT => object!{
+                "msgtype" => "text",
+                "text" => object! {
+                    "content" => dingtalk_message.text_content,
+                }
+            },
+         DingTalkMessageType::MARKDOWN => object!{
+                "msgtype" => "markdown",
+                "markdown" => object! {
+                    "title" => dingtalk_message.markdown_title,
+                    "text" => dingtalk_message.markdown_content,
+                }
+            },
+        };
+        if dingtalk_message.at_all || dingtalk_message.at_mobiles.len() > 0 {
+            let mut at_mobiles = json::JsonValue::new_object();
+            for m in &dingtalk_message.at_mobiles {
+                at_mobiles.push(m.clone()).ok();
+            }
+            message_json["at"] = object!{
+                "atMobiles" => at_mobiles,
+                "isAtAll" => dingtalk_message.at_all,
+            };
+        }
+        self.send(&json::stringify(message_json))
+    }
+
     /// Send text message
     pub fn send_text(&self, text_message: &str) -> Result<(), Box<dyn std::error::Error>> {
-        self.send(&json::stringify(object!{
-            "msgtype" => "text",
-            "text" => object! {
-                "content" => text_message,
-            }
-        }))
+        self.send_message(&DingTalkMessage::new_text(text_message))
     }
 
     /// Send markdown message
     pub fn send_markdown(&self, title: &str, text: &str) -> Result<(), Box<dyn std::error::Error>> {
-        self.send(&json::stringify(object!{
-            "msgtype" => "markdown",
-            "markdown" => object! {
-                "title" => title,
-                "text" => text,
-            }
-        }))
+        self.send_message(&DingTalkMessage::new_markdown(title, text))
     }
 
     /// Direct send JSON message
