@@ -21,6 +21,7 @@ const APPLICATION_JSON_UTF8: &str = "application/json; charset=utf-8";
 const DEFAULT_DINGTALK_ROBOT_URL: &str = "https://oapi.dingtalk.com/robot/send?access_token=";
 
 /// `DingTalk` is a simple SDK for DingTalk webhook robot
+/// 
 /// Document https://ding-doc.dingtalk.com/doc#/serverapi2/qf2nxq
 /// 
 /// Sample code:
@@ -44,8 +45,9 @@ pub struct DingTalk<'a> {
 #[derive(Clone, Copy, Debug)]
 pub enum DingTalkMessageType {
     TEXT,
-    // LINK,
+    LINK,
     MARKDOWN,
+    // ACTION_CARD, todo!()
 }
 
 /// DingTalk message
@@ -54,6 +56,10 @@ pub struct DingTalkMessage<'a> {
     pub text_content: &'a str,
     pub markdown_title: &'a str,
     pub markdown_content: &'a str,
+    pub link_text: &'a str,
+    pub link_title: &'a str,
+    pub link_pic_url: &'a str,
+    pub link_message_url: &'a str,
     pub at_all: bool,
     pub at_mobiles: Vec<String>,
 }
@@ -69,6 +75,11 @@ impl <'a> DingTalkMessage<'a> {
     pub fn new_markdown(markdown_title: &'a str, markdown_content: &'a str) -> Self {
         Self::new(DingTalkMessageType::MARKDOWN).markdown(markdown_title, markdown_content)
     }
+
+    /// New link DingTalk message
+    pub fn new_link(link_title: &'a str, link_text: &'a str, link_pic_url: &'a str, link_message_url: &'a str) -> Self {
+        Self::new(DingTalkMessageType::LINK).link(link_title, link_text, link_pic_url, link_message_url)
+    }
     
     /// New DingTalk message
     pub fn new(message_type: DingTalkMessageType) -> Self {
@@ -77,6 +88,10 @@ impl <'a> DingTalkMessage<'a> {
             text_content: "",
             markdown_title: "",
             markdown_content: "",
+            link_text: "",
+            link_title: "",
+            link_pic_url: "",
+            link_message_url: "",
             at_all: false,
             at_mobiles: vec![],
         }
@@ -85,6 +100,15 @@ impl <'a> DingTalkMessage<'a> {
     /// Set text
     pub fn text(mut self, text_content: &'a str) -> Self {
         self.text_content = text_content;
+        self
+    }
+
+    /// Set link
+    pub fn link(mut self, link_title: &'a str, link_text: &'a str, link_pic_url: &'a str, link_message_url: &'a str) -> Self {
+        self.link_title = link_title;
+        self.link_text = link_text;
+        self.link_pic_url = link_pic_url;
+        self.link_message_url = link_message_url;
         self
     }
 
@@ -121,6 +145,7 @@ impl <'a> DingTalk<'a> {
         }
     }
 
+    /// Send DingTalk message
     pub fn send_message(&self, dingtalk_message: &DingTalkMessage) -> Result<(), Box<dyn std::error::Error>> {
         let mut message_json = match dingtalk_message.message_type {
             DingTalkMessageType::TEXT => object!{
@@ -129,7 +154,16 @@ impl <'a> DingTalk<'a> {
                     "content" => dingtalk_message.text_content,
                 }
             },
-         DingTalkMessageType::MARKDOWN => object!{
+            DingTalkMessageType::LINK => object!{
+                "msgtype" => "link",
+                "link" => object!{
+                    "text" => dingtalk_message.link_text,
+                    "title" => dingtalk_message.link_title,
+                    "picUrl" => dingtalk_message.link_pic_url,
+                    "messageUrl" => dingtalk_message.link_message_url,
+                }
+            },
+            DingTalkMessageType::MARKDOWN => object!{
                 "msgtype" => "markdown",
                 "markdown" => object! {
                     "title" => dingtalk_message.markdown_title,
@@ -158,6 +192,11 @@ impl <'a> DingTalk<'a> {
     /// Send markdown message
     pub fn send_markdown(&self, title: &str, text: &str) -> Result<(), Box<dyn std::error::Error>> {
         self.send_message(&DingTalkMessage::new_markdown(title, text))
+    }
+
+    /// Send link message
+    pub fn send_link(&self, link_title: &'a str, link_text: &'a str, link_pic_url: &'a str, link_message_url: &'a str) -> Result<(), Box<dyn std::error::Error>> {
+        self.send_message(&DingTalkMessage::new_link(link_title, link_text, link_pic_url, link_message_url))
     }
 
     /// Direct send JSON message

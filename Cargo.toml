@@ -1,6 +1,6 @@
 [package]
 name = "dingtalk"
-version = "0.0.3"
+version = "0.1.0"
 authors = ["Hatter Jiang <jht5945@gmail.com>"]
 edition = "2018"
 description = "DingTalk Util"
