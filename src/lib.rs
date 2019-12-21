@@ -35,6 +35,7 @@ const DEFAULT_DINGTALK_ROBOT_URL: &str = "https://oapi.dingtalk.com/robot/send?a
 /// dt.send_message(&DingTalkMessage::new_text("Hello World!").at_all())?;
 /// ```
 pub struct DingTalk<'a> {
+    pub default_webhook_url: &'a str,
     pub access_token: &'a str,
     pub sec_token: &'a str,
 }
@@ -140,9 +141,15 @@ impl <'a> DingTalk<'a> {
     /// `access_token` is access token, `sec_token` can be empty `""`
     pub fn new(access_token: &'a str, sec_token: &'a str) -> Self {
         DingTalk {
+            default_webhook_url: DEFAULT_DINGTALK_ROBOT_URL,
             access_token: access_token,
             sec_token: sec_token,
         }
+    }
+
+    /// Set default webhook url
+    pub fn set_default_webhook_url(&mut self, default_webhook_url: &'a str) {
+        self.default_webhook_url = default_webhook_url;
     }
 
     /// Send DingTalk message
@@ -216,7 +223,7 @@ impl <'a> DingTalk<'a> {
     /// Generate signed dingtalk webhook URL
     pub fn generate_signed_url(&self) -> String {
         let mut signed_url = String::with_capacity(1024);
-        signed_url.push_str(DEFAULT_DINGTALK_ROBOT_URL);
+        signed_url.push_str(self.default_webhook_url);
         signed_url.push_str(&urlencoding::encode(self.access_token));
 
         if self.sec_token != "" {
@@ -234,7 +241,7 @@ impl <'a> DingTalk<'a> {
     }
 }
 
-
+/// calc hma_sha256 digest
 fn calc_hmac_sha256(key: &[u8], message: &[u8]) -> MacResult {
     let mut hmac = Hmac::new(Sha256::new(), key);
     hmac.input(message);
