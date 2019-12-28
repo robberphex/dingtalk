@@ -51,7 +51,14 @@ pub enum DingTalkMessageType {
     // ACTION_CARD, todo!()
 }
 
+/// Default DingTalkMessageType is TEXT
+impl Default for DingTalkMessageType {
+
+    fn default() -> Self { DingTalkMessageType::TEXT }
+}
+
 /// DingTalk message
+#[derive(Debug, Default)]
 pub struct DingTalkMessage<'a> {
     pub message_type: DingTalkMessageType,
     pub text_content: &'a str,
@@ -86,15 +93,7 @@ impl <'a> DingTalkMessage<'a> {
     pub fn new(message_type: DingTalkMessageType) -> Self {
         DingTalkMessage {
             message_type: message_type,
-            text_content: "",
-            markdown_title: "",
-            markdown_content: "",
-            link_text: "",
-            link_title: "",
-            link_pic_url: "",
-            link_message_url: "",
-            at_all: false,
-            at_mobiles: vec![],
+            ..Default::default()
         }
     }
 
