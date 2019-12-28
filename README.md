@@ -16,6 +16,8 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #### Changelog
 
+* v0.1.2
+    * Add `Default::default()` support
 * v0.1.1
     * Add `set_default_webhook_url`, default dingtalk webhook url
 * v0.1.0
