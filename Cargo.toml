@@ -4,6 +4,7 @@ version = "0.2.1"
 authors = ["Hatter Jiang <jht5945@gmail.com>"]
 edition = "2018"
 description = "DingTalk Robot Util, Send text/markdown/link messages using DingTalk robot"
+keywords = ["DingTalk", "Robot", "Message"]
 readme = "README.md"
 repository = "https://git.hatter.ink/hatter/dingtalk"
 license = "MIT"
