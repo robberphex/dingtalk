@@ -149,14 +149,7 @@ impl <'a> DingTalk<'a> {
 
     /// Create `DingTalk` from file
     /// 
-    /// Format:
-    /// ```json
-    /// {
-    ///     "default_webhook_url": "", // option
-    ///     "access_token": "<access token>",
-    ///     "sec_token": "<sec token>" // option
-    /// }
-    /// ```
+    /// Format see `DingTalk::from_json(json: &str)`
     pub fn from_file(f: &str) -> XResult<Self> {
         let f_path_buf = if f.starts_with("~/") {
             let home = PathBuf::from(env::var("HOME")?);
@@ -165,9 +158,23 @@ impl <'a> DingTalk<'a> {
             PathBuf::from(f)
         };
         let f_content = fs::read_to_string(f_path_buf)?;
-        let f_json_value = json::parse(&f_content)?;
+        Self::from_json(&f_content)
+    }
+
+    /// Create `DingTalk` from JSON string
+    /// 
+    /// Format:
+    /// ```json
+    /// {
+    ///     "default_webhook_url": "", // option
+    ///     "access_token": "<access token>",
+    ///     "sec_token": "<sec token>" // option
+    /// }
+    /// ```
+    pub fn from_json(json: &str) -> XResult<Self> {
+        let f_json_value = json::parse(json)?;
         if !f_json_value.is_object() {
-            return Err(Box::new(Error::new(ErrorKind::Other, format!("JSON format erorr: {}", f_content))));
+            return Err(Box::new(Error::new(ErrorKind::Other, format!("JSON format erorr: {}", json))));
         }
 
         let default_webhook_url: &'a str = Self::string_to_a_str(f_json_value["default_webhook_url"].as_str().unwrap_or(DEFAULT_DINGTALK_ROBOT_URL).to_owned());
