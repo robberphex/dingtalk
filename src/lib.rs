@@ -48,6 +48,7 @@ pub struct DingTalk<'a> {
 /// DingTalk message type
 /// * TEXT - text message
 /// * MARKDONW - markdown message
+/// * LINK - link message
 #[derive(Clone, Copy, Debug)]
 pub enum DingTalkMessageType {
     TEXT,
@@ -108,19 +109,19 @@ impl <'a> DingTalkMessage<'a> {
         self
     }
 
+    /// Set markdown
+    pub fn markdown(mut self, markdown_title: &'a str, markdown_content: &'a str) -> Self {
+        self.markdown_title = markdown_title;
+        self.markdown_content = markdown_content;
+        self
+    }
+
     /// Set link
     pub fn link(mut self, link_title: &'a str, link_text: &'a str, link_pic_url: &'a str, link_message_url: &'a str) -> Self {
         self.link_title = link_title;
         self.link_text = link_text;
         self.link_pic_url = link_pic_url;
         self.link_message_url = link_message_url;
-        self
-    }
-
-    /// Set markdown
-    pub fn markdown(mut self, markdown_title: &'a str, markdown_content: &'a str) -> Self {
-        self.markdown_title = markdown_title;
-        self.markdown_content = markdown_content;
         self
     }
 
@@ -198,6 +199,9 @@ impl <'a> DingTalk<'a> {
     }
 
     /// Send DingTalk message
+    /// 
+    /// 1. Create DingTalk JSON message
+    /// 2. POST JSON message to DingTalk server
     pub fn send_message(&self, dingtalk_message: &DingTalkMessage) -> XResult<()> {
         let mut message_json = match dingtalk_message.message_type {
             DingTalkMessageType::TEXT => object!{
@@ -285,7 +289,7 @@ impl <'a> DingTalk<'a> {
         signed_url
     }
 
-    // SAFE? may cause memory leak?
+    // SAFE? may these codes cause memory leak?
     fn string_to_a_str(s: &str) -> &'a str {
         Box::leak(s.to_owned().into_boxed_str())
     }
