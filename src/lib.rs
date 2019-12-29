@@ -124,13 +124,13 @@ impl <'a> DingTalkMessage<'a> {
         self
     }
 
-    // At all
+    /// At all
     pub fn at_all(mut self) -> Self {
         self.at_all = true;
         self
     }
 
-    // At mobiles
+    /// At mobiles
     pub fn at_mobiles(mut self, mobiles: &Vec<String>) -> Self {
         for m in mobiles {
             self.at_mobiles.push(m.clone());
