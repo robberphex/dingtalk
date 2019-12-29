@@ -1,4 +1,4 @@
-# DingTalk
+# dingtalk
 
 DingTalk Robot Util, Send text/markdown/link messages using DingTalk robot
 
