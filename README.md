@@ -4,6 +4,8 @@ DingTalk util
 
 钉钉机器人 Rust SDK
 
+
+Sample 1:
 ```rust
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let dt = DingTalk::new("<token>", "");
@@ -13,9 +15,21 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+Sample 2 (Read token from file):
+```rust
+pub fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let dt = DingTalk::from_file("~/.dingtalk-token.json")?;
+    dt.send_text("Hello world!")?;
+
+    Ok(())
+}
+```
+
 
 #### Changelog
 
+* v0.2.1
+    * Add `Dingtalk::from_json`, read token from JSON string
 * v0.2.0
     * Add `DingTalk::from_file`, read token from file
 * v0.1.2

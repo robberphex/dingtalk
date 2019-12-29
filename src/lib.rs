@@ -139,12 +139,6 @@ impl <'a> DingTalkMessage<'a> {
     }
 }
 
-#[test]
-fn my_simple_test() {
-    let dt = DingTalk::from_file("~/.dingtalk-token.json").unwrap();
-    dt.send_text("test").ok();
-}
-
 impl <'a> DingTalk<'a> {
 
     /// Create `DingTalk` from file
