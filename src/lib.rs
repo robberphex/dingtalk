@@ -104,6 +104,11 @@ impl <'a> DingTalkMessage<'a> {
     pub fn new_link(link_title: &'a str, link_text: &'a str, link_pic_url: &'a str, link_message_url: &'a str) -> Self {
         Self::new(DingTalkMessageType::LINK).link(link_title, link_text, link_pic_url, link_message_url)
     }
+
+    // New feed card DingTalk message
+    pub fn new_feed_card() -> Self {
+        Self::new(DingTalkMessageType::FEEDCARD)
+    }
     
     /// New DingTalk message
     pub fn new(message_type: DingTalkMessageType) -> Self {
@@ -133,6 +138,21 @@ impl <'a> DingTalkMessage<'a> {
         self.link_pic_url = link_pic_url;
         self.link_message_url = link_message_url;
         self
+    }
+
+    /// Add feed card link
+    pub fn add_feed_card_link(mut self, link: DingTalkMessageFeedCardLink) -> Self {
+        self.feed_card_links.push(link);
+        self
+    }
+
+    /// Add feed card link detail
+    pub fn add_feed_card_link_detail(self, title: &'a str, message_url: &'a str, pic_url: &'a str) -> Self {
+        self.add_feed_card_link(DingTalkMessageFeedCardLink {
+            title: title.to_owned(),
+            message_url: message_url.to_owned(),
+            pic_url: pic_url.to_owned(),
+        })
     }
 
     /// At all
