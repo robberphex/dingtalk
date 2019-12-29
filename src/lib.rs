@@ -49,18 +49,27 @@ pub struct DingTalk<'a> {
 /// * TEXT - text message
 /// * MARKDONW - markdown message
 /// * LINK - link message
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum DingTalkMessageType {
     TEXT,
     LINK,
     MARKDOWN,
     // ACTION_CARD, todo!()
+    FEEDCARD,
 }
 
 /// Default DingTalkMessageType is TEXT
 impl Default for DingTalkMessageType {
 
     fn default() -> Self { DingTalkMessageType::TEXT }
+}
+
+/// DingTalk message feed card link
+#[derive(Debug)]
+pub struct DingTalkMessageFeedCardLink {
+    pub title: String,
+    pub message_url: String,
+    pub pic_url: String,
 }
 
 /// DingTalk message
@@ -74,6 +83,7 @@ pub struct DingTalkMessage<'a> {
     pub link_title: &'a str,
     pub link_pic_url: &'a str,
     pub link_message_url: &'a str,
+    pub feed_card_links: Vec<DingTalkMessageFeedCardLink>,
     pub at_all: bool,
     pub at_mobiles: Vec<String>,
 }
@@ -226,7 +236,24 @@ impl <'a> DingTalk<'a> {
                     "text" => dingtalk_message.markdown_content,
                 }
             },
+            DingTalkMessageType::FEEDCARD => object!{
+                "msgtype" => "feedCard",
+            },
         };
+        if DingTalkMessageType::FEEDCARD == dingtalk_message.message_type {
+            let mut links: Vec<json::JsonValue> = vec![];
+            for feed_card_link in &dingtalk_message.feed_card_links {
+                let link = object!{
+                    "title" => feed_card_link.title.as_str(),
+                    "messageURL" => feed_card_link.message_url.as_str(),
+                    "picURL" => feed_card_link.pic_url.as_str(),
+                };
+                links.push(link);
+            }
+            message_json["feedCard"] = object!{
+                "links" => json::JsonValue::Array(links),
+            };
+        }
         if dingtalk_message.at_all || dingtalk_message.at_mobiles.len() > 0 {
             let mut at_mobiles = json::JsonValue::new_object();
             for m in &dingtalk_message.at_mobiles {
