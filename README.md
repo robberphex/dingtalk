@@ -16,6 +16,8 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #### Changelog
 
+* v0.2.0
+    * Add `DingTalk::from_file`, read token from file
 * v0.1.2
     * Add `Default::default()` support
 * v0.1.1
