@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate json;
 
+use std::fs;
+use std::env;
+use std::path::PathBuf;
 use std::time::SystemTime;
 use std::io::{
     Error,
@@ -14,6 +17,8 @@ use crypto::{
     hmac::Hmac,
     sha2::Sha256,
 };
+
+pub type XResult<T> = Result<T, Box<dyn std::error::Error>>;
 
 const CONTENT_TYPE: &str = "Content-Type";
 const APPLICATION_JSON_UTF8: &str = "application/json; charset=utf-8";
@@ -134,7 +139,47 @@ impl <'a> DingTalkMessage<'a> {
     }
 }
 
+#[test]
+fn my_simple_test() {
+    let dt = DingTalk::from_file("~/.dingtalk-token.json").unwrap();
+    dt.send_text("test").ok();
+}
+
 impl <'a> DingTalk<'a> {
+
+    /// Create `DingTalk` from file
+    /// 
+    /// Format:
+    /// ```json
+    /// {
+    ///     "default_webhook_url": "", // option
+    ///     "access_token": "<access token>",
+    ///     "sec_token": "<sec token>" // option
+    /// }
+    /// ```
+    pub fn from_file(f: &str) -> XResult<Self> {
+        let f_path_buf = if f.starts_with("~/") {
+            let home = PathBuf::from(env::var("HOME")?);
+            home.join(f.chars().skip(2).collect::<String>())
+        } else {
+            PathBuf::from(f)
+        };
+        let f_content = fs::read_to_string(f_path_buf)?;
+        let f_json_value = json::parse(&f_content)?;
+        if !f_json_value.is_object() {
+            return Err(Box::new(Error::new(ErrorKind::Other, format!("JSON format erorr: {}", f_content))));
+        }
+
+        let default_webhook_url: &'a str = Self::string_to_a_str(f_json_value["default_webhook_url"].as_str().unwrap_or(DEFAULT_DINGTALK_ROBOT_URL).to_owned());
+        let access_token: &'a str = Self::string_to_a_str(f_json_value["access_token"].as_str().unwrap_or_default().to_owned());
+        let sec_token: &'a str = Self::string_to_a_str(f_json_value["sec_token"].as_str().unwrap_or_default().to_owned());
+        
+        Ok(DingTalk {
+            default_webhook_url: default_webhook_url,
+            access_token: access_token,
+            sec_token: sec_token,
+        })
+    }
 
     /// Create `DingTalk`
     /// `access_token` is access token, `sec_token` can be empty `""`
@@ -152,7 +197,7 @@ impl <'a> DingTalk<'a> {
     }
 
     /// Send DingTalk message
-    pub fn send_message(&self, dingtalk_message: &DingTalkMessage) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn send_message(&self, dingtalk_message: &DingTalkMessage) -> XResult<()> {
         let mut message_json = match dingtalk_message.message_type {
             DingTalkMessageType::TEXT => object!{
                 "msgtype" => "text",
@@ -191,22 +236,22 @@ impl <'a> DingTalk<'a> {
     }
 
     /// Send text message
-    pub fn send_text(&self, text_message: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn send_text(&self, text_message: &str) -> XResult<()> {
         self.send_message(&DingTalkMessage::new_text(text_message))
     }
 
     /// Send markdown message
-    pub fn send_markdown(&self, title: &str, text: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn send_markdown(&self, title: &str, text: &str) -> XResult<()> {
         self.send_message(&DingTalkMessage::new_markdown(title, text))
     }
 
     /// Send link message
-    pub fn send_link(&self, link_title: &'a str, link_text: &'a str, link_pic_url: &'a str, link_message_url: &'a str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn send_link(&self, link_title: &'a str, link_text: &'a str, link_pic_url: &'a str, link_message_url: &'a str) -> XResult<()> {
         self.send_message(&DingTalkMessage::new_link(link_title, link_text, link_pic_url, link_message_url))
     }
 
     /// Direct send JSON message
-    pub fn send(&self, json_message: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn send(&self, json_message: &str) -> XResult<()> {
         let client = reqwest::Client::new();
         let response = client.post(&self.generate_signed_url())
               .header(CONTENT_TYPE, APPLICATION_JSON_UTF8)
@@ -237,6 +282,11 @@ impl <'a> DingTalk<'a> {
         }
         
         signed_url
+    }
+
+    // SAFE? cause memory leak?
+    fn string_to_a_str(s: String) -> &'a str {
+        Box::leak(s.into_boxed_str())
     }
 }
 
