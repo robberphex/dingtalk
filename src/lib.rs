@@ -166,14 +166,14 @@ impl <'a> DingTalk<'a> {
     /// }
     /// ```
     pub fn from_json(json: &str) -> XResult<Self> {
-        let f_json_value = json::parse(json)?;
-        if !f_json_value.is_object() {
+        let json_value = json::parse(json)?;
+        if !json_value.is_object() {
             return Err(Box::new(Error::new(ErrorKind::Other, format!("JSON format erorr: {}", json))));
         }
 
-        let default_webhook_url: &'a str = Self::string_to_a_str(f_json_value["default_webhook_url"].as_str().unwrap_or(DEFAULT_DINGTALK_ROBOT_URL).to_owned());
-        let access_token: &'a str = Self::string_to_a_str(f_json_value["access_token"].as_str().unwrap_or_default().to_owned());
-        let sec_token: &'a str = Self::string_to_a_str(f_json_value["sec_token"].as_str().unwrap_or_default().to_owned());
+        let default_webhook_url = Self::string_to_a_str(json_value["default_webhook_url"].as_str().unwrap_or(DEFAULT_DINGTALK_ROBOT_URL));
+        let access_token = Self::string_to_a_str(json_value["access_token"].as_str().unwrap_or_default());
+        let sec_token = Self::string_to_a_str(json_value["sec_token"].as_str().unwrap_or_default());
         
         Ok(DingTalk {
             default_webhook_url: default_webhook_url,
@@ -285,9 +285,9 @@ impl <'a> DingTalk<'a> {
         signed_url
     }
 
-    // SAFE? cause memory leak?
-    fn string_to_a_str(s: String) -> &'a str {
-        Box::leak(s.into_boxed_str())
+    // SAFE? may cause memory leak?
+    fn string_to_a_str(s: &str) -> &'a str {
+        Box::leak(s.to_owned().into_boxed_str())
     }
 }
 
