@@ -39,5 +39,5 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 * v0.1.0
     * Add `DingTalk::send_link(...)`, send link message
 * v0.0.3
-    * Add `DingTalkMessage` , can set at_all, at_mobiles now
+    * Add `DingTalkMessage` , can set `at_all`, `at_mobiles` now
 
