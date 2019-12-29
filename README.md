@@ -1,6 +1,6 @@
-# dingtalk
+# DingTalk
 
-DingTalk util
+DingTalk Robot Util, Send text/markdown/link messages using DingTalk robot
 
 钉钉机器人 Rust SDK
 
