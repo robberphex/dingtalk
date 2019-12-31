@@ -28,8 +28,11 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #### Changelog
 
+* v0.4.0
+    * `TEXT` -> `Text` ..., change enum caps
+    * Add `ActionCard` message, send action card message type
 * v0.3.0
-    * Add `FEEDCARD` message, send feed card message type
+    * Add `FeedCard` message, send feed card message type
 * v0.2.1
     * Add `Dingtalk::from_json`, read token from JSON string
 * v0.2.0
