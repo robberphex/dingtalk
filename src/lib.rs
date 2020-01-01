@@ -39,10 +39,12 @@ const DEFAULT_DINGTALK_ROBOT_URL: &str = "https://oapi.dingtalk.com/robot/send?a
 /// ```
 /// dt.send_message(&DingTalkMessage::new_text("Hello World!").at_all())?;
 /// ```
+#[derive(Default)]
 pub struct DingTalk<'a> {
     pub default_webhook_url: &'a str,
     pub access_token: &'a str,
     pub sec_token: &'a str,
+    pub direct_url: &'a str,
 }
 
 /// DingTalk message type
@@ -64,16 +66,19 @@ impl Default for DingTalkMessageType {
     fn default() -> Self { DingTalkMessageType::Text }
 }
 
+/// DingTalk messge action card avatar
 #[derive(Clone, Copy, Debug)]
 pub enum DingTalkMessageActionCardHideAvatar {
     Hide,
     Show,
 }
 
+// default value
 impl Default for DingTalkMessageActionCardHideAvatar {
     fn default() -> Self { DingTalkMessageActionCardHideAvatar::Show }
 }
 
+/// into JsonValue
 impl From<DingTalkMessageActionCardHideAvatar> for json::JsonValue {
     fn from(a: DingTalkMessageActionCardHideAvatar) -> Self {
         json::JsonValue::String(match a {
@@ -83,16 +88,19 @@ impl From<DingTalkMessageActionCardHideAvatar> for json::JsonValue {
     }
 }
 
+/// DingTalk message action card orientation
 #[derive(Clone, Copy, Debug)]
 pub enum DingTalkMessageActionCardBtnOrientation {
     Vertical,
     Landscape,
 }
 
+/// default value
 impl Default for DingTalkMessageActionCardBtnOrientation {
     fn default() -> Self { DingTalkMessageActionCardBtnOrientation::Vertical }
 }
 
+/// into JsonValue
 impl From<DingTalkMessageActionCardBtnOrientation> for json::JsonValue {
     fn from(o: DingTalkMessageActionCardBtnOrientation) -> Self {
         json::JsonValue::String(match o {
@@ -130,7 +138,7 @@ pub struct DingTalkMessage<'a> {
     pub link_message_url: &'a str,
     pub action_card_title: &'a str,
     pub action_card_text: &'a str,
-    pub action_card_hide_vatar: DingTalkMessageActionCardHideAvatar,
+    pub action_card_hide_avatar: DingTalkMessageActionCardHideAvatar,
     pub action_card_btn_orientation: DingTalkMessageActionCardBtnOrientation,
     pub action_card_single_btn: Option<DingTalkMessageActionCardBtn>,
     pub action_card_btns: Vec<DingTalkMessageActionCardBtn>,
@@ -201,13 +209,13 @@ impl <'a> DingTalkMessage<'a> {
 
     /// Set action card show avator(default show)
     pub fn action_card_show_avatar(mut self) -> Self {
-        self.action_card_hide_vatar = DingTalkMessageActionCardHideAvatar::Show;
+        self.action_card_hide_avatar = DingTalkMessageActionCardHideAvatar::Show;
         self
     }
 
     /// Set action card hide avator
     pub fn action_card_hide_avatar(mut self) -> Self {
-        self.action_card_hide_vatar = DingTalkMessageActionCardHideAvatar::Show;
+        self.action_card_hide_avatar = DingTalkMessageActionCardHideAvatar::Hide;
         self
     }
 
@@ -305,7 +313,16 @@ impl <'a> DingTalk<'a> {
             default_webhook_url: default_webhook_url,
             access_token: access_token,
             sec_token: sec_token,
+            ..Default::default()
         })
+    }
+
+    /// Create `DingTalk` from url, for outgoing robot
+    pub fn from_url(url: &'a str) -> Self {
+        DingTalk {
+            direct_url: url,
+            ..Default::default()
+        }
     }
 
     /// Create `DingTalk`
@@ -315,6 +332,7 @@ impl <'a> DingTalk<'a> {
             default_webhook_url: DEFAULT_DINGTALK_ROBOT_URL,
             access_token: access_token,
             sec_token: sec_token,
+            ..Default::default()
         }
     }
 
@@ -356,7 +374,7 @@ impl <'a> DingTalk<'a> {
                 "actionCard" => object!{
                     "title" => dingtalk_message.action_card_title,
                     "text" => dingtalk_message.action_card_text,
-                    "hideAvatar" => dingtalk_message.action_card_hide_vatar,
+                    "hideAvatar" => dingtalk_message.action_card_hide_avatar,
                     "btnOrientation" => dingtalk_message.action_card_btn_orientation,
                 },
             },
@@ -439,6 +457,9 @@ impl <'a> DingTalk<'a> {
 
     /// Generate signed dingtalk webhook URL
     pub fn generate_signed_url(&self) -> String {
+        if !self.direct_url.is_empty() {
+            return self.direct_url.into();
+        }
         let mut signed_url = String::with_capacity(1024);
         signed_url.push_str(self.default_webhook_url);
         signed_url.push_str(&urlencoding::encode(self.access_token));

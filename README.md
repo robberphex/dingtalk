@@ -28,9 +28,11 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #### Changelog
 
-* v0.4.0
+* v1.0.0
     * `TEXT` -> `Text` ..., change enum caps
     * Add `ActionCard` message, send action card message type
+    * Add `direct_url` for `DingTalk`, for outgoing robot
+    * Implemented almost the functions listed on https://ding-doc.dingtalk.com/doc#/serverapi2/qf2nxq/0fa88adc
 * v0.3.0
     * Add `FeedCard` message, send feed card message type
 * v0.2.1
