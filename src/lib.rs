@@ -51,6 +51,7 @@ pub struct DingTalk<'a> {
 /// * Text - text message
 /// * Markdown - markdown message
 /// * Link - link message
+/// * ActionCard - action card message
 /// * FeedCard - feed card message
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum DingTalkMessageType {
