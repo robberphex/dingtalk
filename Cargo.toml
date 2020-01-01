@@ -1,10 +1,10 @@
 [package]
 name = "dingtalk"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Hatter Jiang <jht5945@gmail.com>"]
 edition = "2018"
-description = "DingTalk Robot Util, Send text/markdown/link messages using DingTalk robot"
-keywords = ["DingTalk", "Robot", "Message"]
+description = "DingTalk Robot Util, Send text/markdown/link messages using DingTalk robot, 钉钉机器人"
+keywords = ["DingTalk", "Robot", "Message", "钉钉", "机器人"]
 readme = "README.md"
 repository = "https://git.hatter.ink/hatter/dingtalk"
 license = "MIT"
