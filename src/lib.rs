@@ -497,7 +497,7 @@ fn calc_hmac_sha256(key: &[u8], message: &[u8]) -> MacResult {
 
 #[test]
 fn run_all_tests() {
-    futures::executor::block_on(_test_send()).unwrap();
+    tokio_test::block_on(_test_send()).unwrap();
 }
 
 async fn _test_send() -> XResult<()> {

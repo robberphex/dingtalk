@@ -9,6 +9,8 @@ NOTE: From version 1.1.0 dingtalk uses reqwest 0.10.0's async/await API.
 
 Sample 1:
 ```rust
+use dingtalk::DingTalk;
+
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let dt = DingTalk::new("<token>", "");
@@ -17,6 +19,8 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+Need use crate: `tokio = { version = "0.2.6", features = ["full"] }`.
 
 Sample 2 (Read token from file):
 ```rust
