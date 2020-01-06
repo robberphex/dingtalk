@@ -1,13 +1,15 @@
 #[macro_use]
 extern crate json;
 
-use std::fs;
-use std::env;
-use std::path::PathBuf;
-use std::time::SystemTime;
-use std::io::{
-    Error,
-    ErrorKind,
+use std::{
+    fs,
+    env,
+    path::PathBuf,
+    time::SystemTime,
+    io::{
+        Error,
+        ErrorKind,
+    },
 };
 use crypto::{
     mac::{
