@@ -346,7 +346,7 @@ impl <'a> DingTalk<'a> {
     /// 
     /// 1. Create DingTalk JSON message
     /// 2. POST JSON message to DingTalk server
-    pub fn send_message(&self, dingtalk_message: &DingTalkMessage) -> XResult<()> {
+    pub async fn send_message(&self, dingtalk_message: &DingTalkMessage<'_>) -> XResult<()> {
         let mut message_json = match dingtalk_message.message_type {
             DingTalkMessageType::Text => object!{
                 "msgtype" => "text",
@@ -424,35 +424,38 @@ impl <'a> DingTalk<'a> {
                 "isAtAll" => dingtalk_message.at_all,
             };
         }
-        self.send(&json::stringify(message_json))
+        self.send(&json::stringify(message_json)).await
     }
 
     /// Send text message
-    pub fn send_text(&self, text_message: &str) -> XResult<()> {
-        self.send_message(&DingTalkMessage::new_text(text_message))
+    pub async fn send_text(&self, text_message: &str) -> XResult<()> {
+        self.send_message(&DingTalkMessage::new_text(text_message)).await
     }
 
     /// Send markdown message
-    pub fn send_markdown(&self, title: &str, text: &str) -> XResult<()> {
-        self.send_message(&DingTalkMessage::new_markdown(title, text))
+    pub async fn send_markdown(&self, title: &str, text: &str) -> XResult<()> {
+        self.send_message(&DingTalkMessage::new_markdown(title, text)).await
     }
 
     /// Send link message
-    pub fn send_link(&self, link_title: &'a str, link_text: &'a str, link_pic_url: &'a str, link_message_url: &'a str) -> XResult<()> {
-        self.send_message(&DingTalkMessage::new_link(link_title, link_text, link_pic_url, link_message_url))
+    pub async fn send_link(&self, link_title: &'a str, link_text: &'a str, link_pic_url: &'a str, link_message_url: &'a str) -> XResult<()> {
+        self.send_message(&DingTalkMessage::new_link(link_title, link_text, link_pic_url, link_message_url)).await
     }
 
     /// Direct send JSON message
-    pub fn send(&self, json_message: &str) -> XResult<()> {
+    pub async fn send(&self, json_message: &str) -> XResult<()> {
         let client = reqwest::Client::new();
-        let response = client.post(&self.generate_signed_url())
+        let response = match client.post(&self.generate_signed_url())
               .header(CONTENT_TYPE, APPLICATION_JSON_UTF8)
               .body(json_message.as_bytes().to_vec())
-              .send()?;
+              .send().await {
+                  Ok(r) => r,
+                  Err(e) => return Err(Box::new(Error::new(ErrorKind::Other, format!("Unknown error: {}", e))) as Box<dyn std::error::Error>),
+              };
 
         match response.status().as_u16() {
             200_u16 => Ok(()),
-            _ => Err(Box::new(Error::new(ErrorKind::Other, format!("Unknown status: {}", response.status().as_u16())))),
+            _ => Err(Box::new(Error::new(ErrorKind::Other, format!("Unknown status: {}", response.status().as_u16()))) as Box<dyn std::error::Error>),
         }
     }
 
@@ -494,19 +497,19 @@ fn calc_hmac_sha256(key: &[u8], message: &[u8]) -> MacResult {
 
 #[test]
 fn run_all_tests() {
-    _test_send().unwrap();
+    futures::executor::block_on(_test_send()).unwrap();
 }
 
-fn _test_send() -> XResult<()> {
+async fn _test_send() -> XResult<()> {
     let dt = DingTalk::from_file("~/.dingtalk-token.json")?;
-    dt.send_text("test message 001 ---------------------")?;
+    dt.send_text("test message 001 ---------------------").await?;
 
     dt.send_markdown("markdown title 001", r#"# markdown content 001
 * line 0
 * line 1
-* line 2"#)?;
+* line 2"#).await?;
 
-    dt.send_link("link title 001", "link content 001", "https://hatter.ink/favicon.png", "https://hatter.ink/")?;
+    dt.send_link("link title 001", "link content 001", "https://hatter.ink/favicon.png", "https://hatter.ink/").await?;
 
     dt.send_message(&DingTalkMessage::new_feed_card()
         .add_feed_card_link(DingTalkMessageFeedCardLink{
@@ -519,14 +522,14 @@ fn _test_send() -> XResult<()> {
             message_url: "https://hatter.ink/".into(),
             pic_url: "https://hatter.ink/favicon.png".into(),
         })
-    )?;
+    ).await?;
 
     dt.send_message(&DingTalkMessage::new_action_card("action card 001", "action card text 001")
         .set_action_card_signle_btn(DingTalkMessageActionCardBtn{
             title: "test signle btn title".into(),
             action_url: "https://hatter.ink/".into(),
         })
-    )?;
+    ).await?;
 
     dt.send_message(&DingTalkMessage::new_action_card("action card 002", "action card text 002")
         .add_action_card_btn(DingTalkMessageActionCardBtn{
@@ -537,7 +540,7 @@ fn _test_send() -> XResult<()> {
             title: "test signle btn title 02".into(),
             action_url: "https://hatter.ink/".into(),
         })
-    )?;
+    ).await?;
 
     Ok(())
 }

@@ -4,12 +4,15 @@ DingTalk Robot Util, Send text/markdown/link messages using DingTalk robot
 
 钉钉机器人 Rust SDK
 
+NOTE: From version 1.1.0 dingtalk uses reqwest 0.10.0's async/await API.
+
 
 Sample 1:
 ```rust
-pub fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let dt = DingTalk::new("<token>", "");
-    dt.send_text("Hello world!")?;
+    dt.send_text("Hello world!").await?;
 
     Ok(())
 }
@@ -17,9 +20,10 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 Sample 2 (Read token from file):
 ```rust
-pub fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let dt = DingTalk::from_file("~/.dingtalk-token.json")?;
-    dt.send_text("Hello world!")?;
+    dt.send_text("Hello world!").await?;
 
     Ok(())
 }
@@ -30,12 +34,12 @@ Sample, send markdown message:
 dt.send_markdown("markdown title 001", r#"# markdown content 001
 * line 0
 * line 1
-* line 2"#)?;
+* line 2"#).await?;
 ```
 
 Sample, send link message:
 ```rust
-dt.send_link("link title 001", "link content 001", "https://hatter.ink/favicon.png", "https://hatter.ink/")?;
+dt.send_link("link title 001", "link content 001", "https://hatter.ink/favicon.png", "https://hatter.ink/").await?;
 ```
 
 Sample, send feed card message:
@@ -51,7 +55,7 @@ dt.send_message(&DingTalkMessage::new_feed_card()
         message_url: "https://hatter.ink/".into(),
         pic_url: "https://hatter.ink/favicon.png".into(),
     })
-)?;
+).await?;
 ```
 
 Sample, send action card message(single btn):
@@ -61,7 +65,7 @@ dt.send_message(&DingTalkMessage::new_action_card("action card 001", "action car
         title: "test signle btn title".into(),
         action_url: "https://hatter.ink/".into(),
     })
-)?;
+).await?;
 ```
 
 Sample, send action card message(multi btns):
@@ -75,14 +79,16 @@ dt.send_message(&DingTalkMessage::new_action_card("action card 002", "action car
         title: "test signle btn title 02".into(),
         action_url: "https://hatter.ink/".into(),
     })
-)?;
+).await?;
 ```
 
 
 #### Changelog
 
+* v1.1.0
+    * Change fn to async/await
 * v1.0.1
-    * change two fn names
+    * Change two fn names
     * Add readme sample codes
 * v1.0.0
     * `TEXT` -> `Text` ..., change enum caps
