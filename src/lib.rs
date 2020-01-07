@@ -321,9 +321,9 @@ impl <'a> DingTalk<'a> {
     }
 
     /// Create `DingTalk` from url, for outgoing robot
-    pub fn from_url(url: &'a str) -> Self {
+    pub fn from_url(direct_url: &'a str) -> Self {
         DingTalk {
-            direct_url: url,
+            direct_url,
             ..Default::default()
         }
     }
