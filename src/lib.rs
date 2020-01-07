@@ -25,7 +25,7 @@ pub type XResult<T> = Result<T, Box<dyn std::error::Error>>;
 const CONTENT_TYPE: &str = "Content-Type";
 const APPLICATION_JSON_UTF8: &str = "application/json; charset=utf-8";
 
-const DEFAULT_DINGTALK_ROBOT_URL: &str = "https://oapi.dingtalk.com/robot/send?access_token=";
+const DEFAULT_DINGTALK_ROBOT_URL: &str = "https://oapi.dingtalk.com/robot/send";
 
 /// `DingTalk` is a simple SDK for DingTalk webhook robot
 /// 
@@ -468,6 +468,18 @@ impl <'a> DingTalk<'a> {
         }
         let mut signed_url = String::with_capacity(1024);
         signed_url.push_str(self.default_webhook_url);
+
+        if self.default_webhook_url.ends_with('?') {
+            // Just Ok
+        } else if self.default_webhook_url.contains('?') {
+            if !self.default_webhook_url.ends_with('&') {
+                signed_url.push_str("&");
+            }
+        } else {
+            signed_url.push_str("?");
+        }
+
+        signed_url.push_str("access_token=");
         signed_url.push_str(&urlencoding::encode(self.access_token));
 
         if self.sec_token != "" {
@@ -480,7 +492,7 @@ impl <'a> DingTalk<'a> {
             signed_url.push_str("&sign=");
             signed_url.push_str(&urlencoding::encode(&hmac_sha256));
         }
-        
+
         signed_url
     }
 
