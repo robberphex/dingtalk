@@ -255,9 +255,9 @@ impl <'a> DingTalkMessage<'a> {
     /// Add feed card link detail
     pub fn add_feed_card_link_detail(self, title: &'a str, message_url: &'a str, pic_url: &'a str) -> Self {
         self.add_feed_card_link(DingTalkMessageFeedCardLink {
-            title: title.to_owned(),
-            message_url: message_url.to_owned(),
-            pic_url: pic_url.to_owned(),
+            title: title.into(),
+            message_url: message_url.into(),
+            pic_url: pic_url.into(),
         })
     }
 
