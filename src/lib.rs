@@ -311,12 +311,13 @@ impl <'a> DingTalk<'a> {
         let default_webhook_url = Self::string_to_a_str(json_value["default_webhook_url"].as_str().unwrap_or(DEFAULT_DINGTALK_ROBOT_URL));
         let access_token = Self::string_to_a_str(json_value["access_token"].as_str().unwrap_or_default());
         let sec_token = Self::string_to_a_str(json_value["sec_token"].as_str().unwrap_or_default());
+        let direct_url = Self::string_to_a_str(json_value["direct_url"].as_str().unwrap_or_default());
         
         Ok(DingTalk {
             default_webhook_url,
             access_token,
             sec_token,
-            ..Default::default()
+            direct_url,
         })
     }
 

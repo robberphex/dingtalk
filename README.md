@@ -89,6 +89,9 @@ dt.send_message(&DingTalkMessage::new_action_card("action card 002", "action car
 
 #### Changelog
 
+* v1.1.1
+    * `DingTalk::from_json` add `direct_url`
+    * Fix problems by clippy
 * v1.1.0
     * Change fn to async/await
 * v1.0.1
