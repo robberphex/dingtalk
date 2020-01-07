@@ -183,7 +183,7 @@ impl <'a> DingTalkMessage<'a> {
     /// New DingTalk message
     pub fn new(message_type: DingTalkMessageType) -> Self {
         DingTalkMessage {
-            message_type: message_type,
+            message_type,
             ..Default::default()
         }
     }
@@ -268,7 +268,7 @@ impl <'a> DingTalkMessage<'a> {
     }
 
     /// At mobiles
-    pub fn at_mobiles(mut self, mobiles: &Vec<String>) -> Self {
+    pub fn at_mobiles(mut self, mobiles: &[String]) -> Self {
         for m in mobiles {
             self.at_mobiles.push(m.clone());
         }
@@ -313,9 +313,9 @@ impl <'a> DingTalk<'a> {
         let sec_token = Self::string_to_a_str(json_value["sec_token"].as_str().unwrap_or_default());
         
         Ok(DingTalk {
-            default_webhook_url: default_webhook_url,
-            access_token: access_token,
-            sec_token: sec_token,
+            default_webhook_url,
+            access_token,
+            sec_token,
             ..Default::default()
         })
     }
@@ -333,8 +333,8 @@ impl <'a> DingTalk<'a> {
     pub fn new(access_token: &'a str, sec_token: &'a str) -> Self {
         DingTalk {
             default_webhook_url: DEFAULT_DINGTALK_ROBOT_URL,
-            access_token: access_token,
-            sec_token: sec_token,
+            access_token,
+            sec_token,
             ..Default::default()
         }
     }
@@ -416,7 +416,7 @@ impl <'a> DingTalk<'a> {
                 "links" => json::JsonValue::Array(links),
             };
         }
-        if dingtalk_message.at_all || dingtalk_message.at_mobiles.len() > 0 {
+        if dingtalk_message.at_all || !dingtalk_message.at_mobiles.is_empty() {
             let mut at_mobiles = json::JsonValue::new_object();
             for m in &dingtalk_message.at_mobiles {
                 at_mobiles.push(m.clone()).ok();
