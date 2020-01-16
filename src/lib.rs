@@ -11,13 +11,10 @@ use std::{
         ErrorKind,
     },
 };
-use crypto::{
-    mac::{
-        Mac,
-        MacResult,
-    },
-    hmac::Hmac,
-    sha2::Sha256,
+use sha2::Sha256;
+use hmac::{
+    Hmac,
+    Mac,
 };
 
 pub type XResult<T> = Result<T, Box<dyn std::error::Error>>;
@@ -448,7 +445,7 @@ impl <'a> DingTalk<'a> {
     /// Direct send JSON message
     pub async fn send(&self, json_message: &str) -> XResult<()> {
         let client = reqwest::Client::new();
-        let response = match client.post(&self.generate_signed_url())
+        let response = match client.post(&self.generate_signed_url()?)
               .header(CONTENT_TYPE, APPLICATION_JSON_UTF8)
               .body(json_message.as_bytes().to_vec())
               .send().await {
@@ -463,9 +460,9 @@ impl <'a> DingTalk<'a> {
     }
 
     /// Generate signed dingtalk webhook URL
-    pub fn generate_signed_url(&self) -> String {
+    pub fn generate_signed_url(&self) -> XResult<String> {
         if !self.direct_url.is_empty() {
-            return self.direct_url.into();
+            return Ok(self.direct_url.into());
         }
         let mut signed_url = String::with_capacity(1024);
         signed_url.push_str(self.default_webhook_url);
@@ -486,7 +483,7 @@ impl <'a> DingTalk<'a> {
         if self.sec_token != "" {
             let timestamp = &format!("{}", SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis());
             let timestamp_and_secret = &format!("{}\n{}", timestamp, self.sec_token);
-            let hmac_sha256 = base64::encode(calc_hmac_sha256(self.sec_token.as_bytes(), timestamp_and_secret.as_bytes()).code());
+            let hmac_sha256 = base64::encode(&calc_hmac_sha256(self.sec_token.as_bytes(), timestamp_and_secret.as_bytes())?[..]);
 
             signed_url.push_str("&timestamp=");
             signed_url.push_str(timestamp);
@@ -494,7 +491,7 @@ impl <'a> DingTalk<'a> {
             signed_url.push_str(&urlencoding::encode(&hmac_sha256));
         }
 
-        signed_url
+        Ok(signed_url)
     }
 
     // SAFE? may these codes cause memory leak?
@@ -504,10 +501,13 @@ impl <'a> DingTalk<'a> {
 }
 
 /// calc hma_sha256 digest
-fn calc_hmac_sha256(key: &[u8], message: &[u8]) -> MacResult {
-    let mut hmac = Hmac::new(Sha256::new(), key);
-    hmac.input(message);
-    hmac.result()
+fn calc_hmac_sha256(key: &[u8], message: &[u8]) -> XResult<Vec<u8>> {
+    let mut mac = match Hmac::<Sha256>::new_varkey(key) {
+        Ok(m) => m,
+        Err(e) => return Err(Box::new(Error::new(ErrorKind::Other, format!("Hmac error: {}", e))))
+    };
+    mac.input(message);
+    Ok(mac.result().code().to_vec())
 }
 
 #[test]
