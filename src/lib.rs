@@ -383,16 +383,16 @@ impl <'a> DingTalk<'a> {
             // Just Ok
         } else if self.default_webhook_url.contains('?') {
             if !self.default_webhook_url.ends_with('&') {
-                signed_url.push_str("&");
+                signed_url.push('&');
             }
         } else {
-            signed_url.push_str("?");
+            signed_url.push('?');
         }
 
         signed_url.push_str("access_token=");
         signed_url.push_str(&urlencoding::encode(self.access_token));
 
-        if self.sec_token != "" {
+        if !self.sec_token.is_empty() {
             let timestamp = &format!("{}", SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis());
             let timestamp_and_secret = &format!("{}\n{}", timestamp, self.sec_token);
             let hmac_sha256 = base64::encode(&calc_hmac_sha256(self.sec_token.as_bytes(), timestamp_and_secret.as_bytes())?[..]);

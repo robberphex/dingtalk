@@ -1,6 +1,6 @@
 [package]
 name = "dingtalk"
-version = "1.2.0"
+version = "1.2.1"
 authors = ["Hatter Jiang <jht5945@gmail.com>"]
 edition = "2018"
 description = "DingTalk Robot Util, Send text/markdown/link messages using DingTalk robot, 钉钉机器人"
@@ -16,7 +16,6 @@ urlencoding = "1.0.0"
 futures = "0.3.1"
 hmac = "0.7.1"
 sha2 = "0.8.1"
-maplit = "1.0.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 

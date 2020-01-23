@@ -89,6 +89,8 @@ dt.send_message(&DingTalkMessage::new_action_card("action card 002", "action car
 
 #### Changelog
 
+* v1.2.1
+    * Remove `maplit` crate
 * v1.2.0
     * Use `serde` and `serde_json` crates, replace `json` crate
 * v1.1.2
