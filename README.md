@@ -4,7 +4,9 @@ DingTalk Robot Util, Send text/markdown/link messages using DingTalk robot
 
 钉钉机器人 Rust SDK
 
-NOTE: From version 1.1.0 dingtalk uses reqwest 0.10.0's async/await API.
+NOTE: From version 1.1.0 dingtalk uses reqwest 0.10.0's `async`/`.await` API.
+
+> Official reference: https://ding-doc.dingtalk.com/doc#/serverapi2/qf2nxq/0fa88adc
 
 
 Sample 1:
