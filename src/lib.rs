@@ -1,5 +1,4 @@
-#[macro_use]
-extern crate json;
+use serde_json::Value;
 
 use std::{
     fs,
@@ -15,6 +14,18 @@ use sha2::Sha256;
 use hmac::{
     Hmac,
     Mac,
+};
+
+mod msg;
+use msg::*;
+
+pub use msg:: {
+    DingTalkMessage,
+    DingTalkMessageType,
+    DingTalkMessageActionCardHideAvatar,
+    DingTalkMessageActionCardBtnOrientation,
+    DingTalkMessageActionCardBtn,
+    DingTalkMessageFeedCardLink,
 };
 
 pub type XResult<T> = Result<T, Box<dyn std::error::Error>>;
@@ -44,107 +55,6 @@ pub struct DingTalk<'a> {
     pub access_token: &'a str,
     pub sec_token: &'a str,
     pub direct_url: &'a str,
-}
-
-/// DingTalk message type
-/// * Text - text message
-/// * Markdown - markdown message
-/// * Link - link message
-/// * ActionCard - action card message
-/// * FeedCard - feed card message
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum DingTalkMessageType {
-    Text,
-    Markdown,
-    Link,
-    ActionCard,
-    FeedCard,
-}
-
-/// Default DingTalkMessageType is Text
-impl Default for DingTalkMessageType {
-    fn default() -> Self { DingTalkMessageType::Text }
-}
-
-/// DingTalk messge action card avatar
-#[derive(Clone, Copy, Debug)]
-pub enum DingTalkMessageActionCardHideAvatar {
-    Hide,
-    Show,
-}
-
-// default value
-impl Default for DingTalkMessageActionCardHideAvatar {
-    fn default() -> Self { DingTalkMessageActionCardHideAvatar::Show }
-}
-
-/// into JsonValue
-impl From<DingTalkMessageActionCardHideAvatar> for json::JsonValue {
-    fn from(a: DingTalkMessageActionCardHideAvatar) -> Self {
-        json::JsonValue::String(match a {
-            DingTalkMessageActionCardHideAvatar::Show => "0".into(),
-            DingTalkMessageActionCardHideAvatar::Hide => "1".into(),
-        })
-    }
-}
-
-/// DingTalk message action card orientation
-#[derive(Clone, Copy, Debug)]
-pub enum DingTalkMessageActionCardBtnOrientation {
-    Vertical,
-    Landscape,
-}
-
-/// default value
-impl Default for DingTalkMessageActionCardBtnOrientation {
-    fn default() -> Self { DingTalkMessageActionCardBtnOrientation::Vertical }
-}
-
-/// into JsonValue
-impl From<DingTalkMessageActionCardBtnOrientation> for json::JsonValue {
-    fn from(o: DingTalkMessageActionCardBtnOrientation) -> Self {
-        json::JsonValue::String(match o {
-            DingTalkMessageActionCardBtnOrientation::Vertical => "0".into(),
-            DingTalkMessageActionCardBtnOrientation::Landscape => "1".into(),
-        })
-    }
-}
-
-/// DingTalk message action card btn
-#[derive(Debug)]
-pub struct DingTalkMessageActionCardBtn {
-    pub title: String,
-    pub action_url: String,
-}
-
-/// DingTalk message feed card link
-#[derive(Debug)]
-pub struct DingTalkMessageFeedCardLink {
-    pub title: String,
-    pub message_url: String,
-    pub pic_url: String,
-}
-
-/// DingTalk message
-#[derive(Debug, Default)]
-pub struct DingTalkMessage<'a> {
-    pub message_type: DingTalkMessageType,
-    pub text_content: &'a str,
-    pub markdown_title: &'a str,
-    pub markdown_content: &'a str,
-    pub link_text: &'a str,
-    pub link_title: &'a str,
-    pub link_pic_url: &'a str,
-    pub link_message_url: &'a str,
-    pub action_card_title: &'a str,
-    pub action_card_text: &'a str,
-    pub action_card_hide_avatar: DingTalkMessageActionCardHideAvatar,
-    pub action_card_btn_orientation: DingTalkMessageActionCardBtnOrientation,
-    pub action_card_single_btn: Option<DingTalkMessageActionCardBtn>,
-    pub action_card_btns: Vec<DingTalkMessageActionCardBtn>,
-    pub feed_card_links: Vec<DingTalkMessageFeedCardLink>,
-    pub at_all: bool,
-    pub at_mobiles: Vec<String>,
 }
 
 impl <'a> DingTalkMessage<'a> {
@@ -300,7 +210,7 @@ impl <'a> DingTalk<'a> {
     /// }
     /// ```
     pub fn from_json(json: &str) -> XResult<Self> {
-        let json_value = json::parse(json)?;
+        let json_value: Value = serde_json::from_str(json)?;
         if !json_value.is_object() {
             return Err(Box::new(Error::new(ErrorKind::Other, format!("JSON format erorr: {}", json))));
         }
@@ -348,83 +258,85 @@ impl <'a> DingTalk<'a> {
     /// 2. POST JSON message to DingTalk server
     pub async fn send_message(&self, dingtalk_message: &DingTalkMessage<'_>) -> XResult<()> {
         let mut message_json = match dingtalk_message.message_type {
-            DingTalkMessageType::Text => object!{
-                "msgtype" => "text",
-                "text" => object! {
-                    "content" => dingtalk_message.text_content,
+            DingTalkMessageType::Text => serde_json::to_value(InnerTextMessage {
+                msgtype: DingTalkMessageType::Text,
+                text: InnerTextMessageText {
+                    content: dingtalk_message.text_content.into(),
                 }
-            },
-            DingTalkMessageType::Link => object!{
-                "msgtype" => "link",
-                "link" => object!{
-                    "text" => dingtalk_message.link_text,
-                    "title" => dingtalk_message.link_title,
-                    "picUrl" => dingtalk_message.link_pic_url,
-                    "messageUrl" => dingtalk_message.link_message_url,
+            }),
+            DingTalkMessageType::Link => serde_json::to_value(InnerLinkMessage {
+                msgtype: DingTalkMessageType::Link,
+                link: InnerLinkMessageLink {
+                    title: dingtalk_message.link_title.into(),
+                    text: dingtalk_message.link_text.into(),
+                    pic_url: dingtalk_message.link_pic_url.into(),
+                    message_url: dingtalk_message.link_message_url.into(),
                 }
-            },
-            DingTalkMessageType::Markdown => object!{
-                "msgtype" => "markdown",
-                "markdown" => object! {
-                    "title" => dingtalk_message.markdown_title,
-                    "text" => dingtalk_message.markdown_content,
+            }),
+            DingTalkMessageType::Markdown => serde_json::to_value(InnerMarkdownMessage {
+                msgtype: DingTalkMessageType::Markdown,
+                markdown: InnerMarkdownMessageMarkdown {
+                    title: dingtalk_message.markdown_title.into(),
+                    text: dingtalk_message.markdown_content.into(),
                 }
-            },
-            DingTalkMessageType::ActionCard => object!{
-                "msgtype" => "actionCard",
-                "actionCard" => object!{
-                    "title" => dingtalk_message.action_card_title,
-                    "text" => dingtalk_message.action_card_text,
-                    "hideAvatar" => dingtalk_message.action_card_hide_avatar,
-                    "btnOrientation" => dingtalk_message.action_card_btn_orientation,
-                },
-            },
-            DingTalkMessageType::FeedCard => object!{
-                "msgtype" => "feedCard",
-            },
-        };
+            }),
+            DingTalkMessageType::ActionCard => serde_json::to_value(InnerActionCardMessage {
+                msgtype: DingTalkMessageType::ActionCard,
+                action_card: InnerActionCardMessageActionCard {
+                    title: dingtalk_message.action_card_title.into(),
+                    text: dingtalk_message.action_card_text.into(),
+                    hide_avatar: dingtalk_message.action_card_hide_avatar,
+                    btn_orientation: dingtalk_message.action_card_btn_orientation,
+                }
+            }),
+            DingTalkMessageType::FeedCard => serde_json::to_value(InnerFeedCardMessage {
+                msgtype: DingTalkMessageType::FeedCard,
+                feed_card: InnerFeedCardMessageFeedCard {
+                    links: {
+                        let mut links: Vec<InnerFeedCardMessageFeedCardLink> = vec![];
+                        for feed_card_link in &dingtalk_message.feed_card_links {
+                            links.push(InnerFeedCardMessageFeedCardLink {
+                                title: feed_card_link.title.clone(),
+                                message_url: feed_card_link.message_url.clone(),
+                                pic_url: feed_card_link.pic_url.clone(),
+                            });
+                        }
+                        links
+                    }
+                }
+            })
+        }?;
         if DingTalkMessageType::ActionCard == dingtalk_message.message_type {
             if dingtalk_message.action_card_single_btn.is_some() {
-                let single_btn = dingtalk_message.action_card_single_btn.as_ref().unwrap();
-                message_json["actionCard"]["singleTitle"] = single_btn.title.as_str().into();
-                message_json["actionCard"]["singleURL"] = single_btn.action_url.as_str().into();
-            } else {
-                let mut btns: Vec<json::JsonValue> = vec![];
-                for action_card_btn in &dingtalk_message.action_card_btns {
-                    let btn = object!{
-                        "title" => action_card_btn.title.as_str(),
-                        "actionURL" => action_card_btn.action_url.as_str(),
-                    };
-                    btns.push(btn);
-                }
-                message_json["actionCard"]["btns"] = json::JsonValue::Array(btns);
-            }
-        }
-        if DingTalkMessageType::FeedCard == dingtalk_message.message_type {
-            let mut links: Vec<json::JsonValue> = vec![];
-            for feed_card_link in &dingtalk_message.feed_card_links {
-                let link = object!{
-                    "title" => feed_card_link.title.as_str(),
-                    "messageURL" => feed_card_link.message_url.as_str(),
-                    "picURL" => feed_card_link.pic_url.as_str(),
+                if let Some(single_btn) = dingtalk_message.action_card_single_btn.as_ref() {
+                    message_json["actionCard"]["singleTitle"] = single_btn.title.as_str().into();
+                    message_json["actionCard"]["singleURL"] = single_btn.action_url.as_str().into();
                 };
-                links.push(link);
+            } else {
+                let mut btns: Vec<InnerActionCardMessageBtn> = vec![];
+                for action_card_btn in &dingtalk_message.action_card_btns {
+                    btns.push(InnerActionCardMessageBtn {
+                        title: action_card_btn.title.clone(),
+                        action_url: action_card_btn.action_url.clone(),
+                    });
+                }
+                message_json["actionCard"]["btns"] = serde_json::to_value(btns)?;
             }
-            message_json["feedCard"] = object!{
-                "links" => json::JsonValue::Array(links),
-            };
         }
         if dingtalk_message.at_all || !dingtalk_message.at_mobiles.is_empty() {
-            let mut at_mobiles = json::JsonValue::new_object();
-            for m in &dingtalk_message.at_mobiles {
-                at_mobiles.push(m.clone()).ok();
+            if let Some(m) = message_json.as_object_mut() {
+                let mut at_mobiles: Vec<Value> = vec![];
+                for m in &dingtalk_message.at_mobiles {
+                    at_mobiles.push(Value::String(m.clone()));
+                }
+                let mut at_map = serde_json::Map::new();
+                at_map.insert("atMobiles".into(), Value::Array(at_mobiles));
+                at_map.insert("isAtAll".into(), Value::Bool(dingtalk_message.at_all));
+
+                m.insert("at".into(), Value::Object(at_map));
             }
-            message_json["at"] = object!{
-                "atMobiles" => at_mobiles,
-                "isAtAll" => dingtalk_message.at_all,
-            };
         }
-        self.send(&json::stringify(message_json)).await
+        self.send(&serde_json::to_string(&message_json)?).await
     }
 
     /// Send text message
@@ -508,54 +420,4 @@ fn calc_hmac_sha256(key: &[u8], message: &[u8]) -> XResult<Vec<u8>> {
     };
     mac.input(message);
     Ok(mac.result().code().to_vec())
-}
-
-#[test]
-fn run_all_tests() {
-    tokio_test::block_on(_test_send()).unwrap();
-}
-
-async fn _test_send() -> XResult<()> {
-    let dt = DingTalk::from_file("~/.dingtalk-token.json")?;
-    dt.send_text("test message 001 ---------------------").await?;
-
-    dt.send_markdown("markdown title 001", r#"# markdown content 001
-* line 0
-* line 1
-* line 2"#).await?;
-
-    dt.send_link("link title 001", "link content 001", "https://hatter.ink/favicon.png", "https://hatter.ink/").await?;
-
-    dt.send_message(&DingTalkMessage::new_feed_card()
-        .add_feed_card_link(DingTalkMessageFeedCardLink{
-            title: "test feed card title 001".into(),
-            message_url: "https://hatter.ink/".into(),
-            pic_url: "https://hatter.ink/favicon.png".into(),
-        })
-        .add_feed_card_link(DingTalkMessageFeedCardLink{
-            title: "test feed card title 002".into(),
-            message_url: "https://hatter.ink/".into(),
-            pic_url: "https://hatter.ink/favicon.png".into(),
-        })
-    ).await?;
-
-    dt.send_message(&DingTalkMessage::new_action_card("action card 001", "action card text 001")
-        .set_action_card_signle_btn(DingTalkMessageActionCardBtn{
-            title: "test signle btn title".into(),
-            action_url: "https://hatter.ink/".into(),
-        })
-    ).await?;
-
-    dt.send_message(&DingTalkMessage::new_action_card("action card 002", "action card text 002")
-        .add_action_card_btn(DingTalkMessageActionCardBtn{
-            title: "test signle btn title 01".into(),
-            action_url: "https://hatter.ink/".into(),
-        })
-        .add_action_card_btn(DingTalkMessageActionCardBtn{
-            title: "test signle btn title 02".into(),
-            action_url: "https://hatter.ink/".into(),
-        })
-    ).await?;
-
-    Ok(())
 }
