@@ -5,16 +5,10 @@ use std::{
     env,
     path::PathBuf,
     time::SystemTime,
-    io::{
-        Error,
-        ErrorKind,
-    },
+    io::{Error, ErrorKind,},
 };
 use sha2::Sha256;
-use hmac::{
-    Hmac,
-    Mac,
-};
+use hmac::{Hmac, Mac,};
 
 mod msg;
 use msg::*;
