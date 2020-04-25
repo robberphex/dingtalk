@@ -28,6 +28,20 @@ const CONTENT_TYPE: &str = "Content-Type";
 const APPLICATION_JSON_UTF8: &str = "application/json; charset=utf-8";
 
 const DEFAULT_DINGTALK_ROBOT_URL: &str = "https://oapi.dingtalk.com/robot/send";
+const DEFAULT_WECHAT_WORK_ROBOT_URL: &str = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send";
+
+/// Send Dingtalk or WeChatWork message
+#[derive(Clone, Copy, Debug)]
+pub enum DingTalkType {
+
+    DingTalk,
+
+    WeChatWork,
+}
+
+impl Default for DingTalkType {
+    fn default() -> Self { DingTalkType::DingTalk }
+}
 
 /// `DingTalk` is a simple SDK for DingTalk webhook robot
 /// 
@@ -45,6 +59,7 @@ const DEFAULT_DINGTALK_ROBOT_URL: &str = "https://oapi.dingtalk.com/robot/send";
 /// ```
 #[derive(Default)]
 pub struct DingTalk<'a> {
+    pub dingtalk_type: DingTalkType,
     pub default_webhook_url: &'a str,
     pub access_token: &'a str,
     pub sec_token: &'a str,
@@ -208,13 +223,24 @@ impl <'a> DingTalk<'a> {
         if !json_value.is_object() {
             return Err(Box::new(Error::new(ErrorKind::Other, format!("JSON format erorr: {}", json))));
         }
+        let type_str = json_value["type"].as_str().unwrap_or_default().to_lowercase();
+        let dingtalk_type = match type_str.as_str() {
+            "wechat" | "wechatwork" => DingTalkType::WeChatWork,
+            _ => DingTalkType::DingTalk,
+        };
 
-        let default_webhook_url = Self::string_to_a_str(json_value["default_webhook_url"].as_str().unwrap_or(DEFAULT_DINGTALK_ROBOT_URL));
+        let default_webhook_url = Self::string_to_a_str(json_value["default_webhook_url"].as_str().unwrap_or_else(
+            || match dingtalk_type {
+                DingTalkType::DingTalk => DEFAULT_DINGTALK_ROBOT_URL,
+                DingTalkType::WeChatWork => DEFAULT_WECHAT_WORK_ROBOT_URL,
+            }
+        ));
         let access_token = Self::string_to_a_str(json_value["access_token"].as_str().unwrap_or_default());
         let sec_token = Self::string_to_a_str(json_value["sec_token"].as_str().unwrap_or_default());
         let direct_url = Self::string_to_a_str(json_value["direct_url"].as_str().unwrap_or_default());
         
         Ok(DingTalk {
+            dingtalk_type,
             default_webhook_url,
             access_token,
             sec_token,
@@ -383,7 +409,10 @@ impl <'a> DingTalk<'a> {
             signed_url.push('?');
         }
 
-        signed_url.push_str("access_token=");
+        match self.dingtalk_type {
+            DingTalkType::DingTalk => signed_url.push_str("access_token="),
+            DingTalkType::WeChatWork => signed_url.push_str("key="),
+        }
         signed_url.push_str(&urlencoding::encode(self.access_token));
 
         if !self.sec_token.is_empty() {

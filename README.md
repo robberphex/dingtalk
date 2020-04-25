@@ -88,9 +88,29 @@ dt.send_message(&DingTalkMessage::new_action_card("action card 002", "action car
 ).await?;
 ```
 
+#### JSON Config
+
+DingTalk config:
+```json
+{
+  "access_token": "<access token>",
+  "sec_token": "<sec token>"
+}
+```
+
+WeChat Work config:
+```json
+{
+  "type": "wechat",
+  "access_token": "<token>"
+}
+```
+
 
 #### Changelog
 
+* v1.3.0
+    * Suports WeChat Work now, add type `"type": "wechat"`, supports method `DingTalk::send_text`
 * v1.2.1
     * Remove `maplit` crate
 * v1.2.0
