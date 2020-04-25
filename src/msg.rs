@@ -1,6 +1,19 @@
 use serde::{Serialize, Deserialize};
 
 
+/// Send Dingtalk or WeChatWork message
+#[derive(Clone, Copy, Debug)]
+pub enum DingTalkType {
+
+    DingTalk,
+
+    WeChatWork,
+}
+
+impl Default for DingTalkType {
+    fn default() -> Self { DingTalkType::DingTalk }
+}
+
 /// DingTalk message type
 /// * Text - text message
 /// * Markdown - markdown message

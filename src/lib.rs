@@ -14,6 +14,7 @@ mod msg;
 use msg::*;
 
 pub use msg:: {
+    DingTalkType,
     DingTalkMessage,
     DingTalkMessageType,
     DingTalkMessageActionCardHideAvatar,
@@ -30,18 +31,6 @@ const APPLICATION_JSON_UTF8: &str = "application/json; charset=utf-8";
 const DEFAULT_DINGTALK_ROBOT_URL: &str = "https://oapi.dingtalk.com/robot/send";
 const DEFAULT_WECHAT_WORK_ROBOT_URL: &str = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send";
 
-/// Send Dingtalk or WeChatWork message
-#[derive(Clone, Copy, Debug)]
-pub enum DingTalkType {
-
-    DingTalk,
-
-    WeChatWork,
-}
-
-impl Default for DingTalkType {
-    fn default() -> Self { DingTalkType::DingTalk }
-}
 
 /// `DingTalk` is a simple SDK for DingTalk webhook robot
 /// 
