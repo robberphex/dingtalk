@@ -267,6 +267,16 @@ impl <'a> DingTalk<'a> {
         }
     }
 
+    /// Create `DingTalk` for WeChat Work
+    pub fn new_wechat(key: &'a str) -> Self {
+        DingTalk {
+            default_webhook_url: DEFAULT_WECHAT_WORK_ROBOT_URL,
+            dingtalk_type: DingTalkType::WeChatWork,
+            access_token: key,
+            ..Default::default()
+        }
+    }
+
     /// Set default webhook url
     pub fn set_default_webhook_url(&mut self, default_webhook_url: &'a str) {
         self.default_webhook_url = default_webhook_url;

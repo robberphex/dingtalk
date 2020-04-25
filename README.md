@@ -109,6 +109,8 @@ WeChat Work config:
 
 #### Changelog
 
+* v1.3.1
+    * Add `DingTalk::new_wechat`
 * v1.3.0
     * Suports WeChat Work now, add type `"type": "wechat"`, supports method `DingTalk::send_text`
 * v1.2.1
