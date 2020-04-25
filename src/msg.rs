@@ -10,6 +10,7 @@ pub enum DingTalkType {
     WeChatWork,
 }
 
+/// Default DingTalkType is DingTalk
 impl Default for DingTalkType {
     fn default() -> Self { DingTalkType::DingTalk }
 }
