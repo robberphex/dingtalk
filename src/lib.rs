@@ -183,6 +183,27 @@ impl <'a> DingTalkMessage<'a> {
 
 impl <'a> DingTalk<'a> {
 
+    /// Create `DingTalk` from token:
+    /// wechatwork:access_token
+    /// dingtalk:access_token?sec_token
+    pub fn from_token(token: &str) -> XResult<Self> {
+        if token.starts_with("dingtalk:") {
+            let token_and_or_sec = &token["dingtalk:".len()..];
+            let mut token_and_or_sec_vec = token_and_or_sec.split('?');
+            let access_token = match token_and_or_sec_vec.next() {
+                Some(t) => t, None => token_and_or_sec,
+            };
+            let sec_token = match token_and_or_sec_vec.next() {
+                Some(t) => t, None => "",
+            };
+            Ok(Self::new(Self::string_to_a_str(access_token), Self::string_to_a_str(sec_token)))
+        } else if token.starts_with("wechatwork:") {
+            Ok(Self::new_wechat(Self::string_to_a_str(&token["wechatwork:".len()..])))
+        } else {
+            Err(Box::new(Error::new(ErrorKind::Other, format!("Tokne format erorr: {}", token))))
+        }
+    }
+
     /// Create `DingTalk` from file
     /// 
     /// Format see `DingTalk::from_json(json: &str)`

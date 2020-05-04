@@ -109,6 +109,8 @@ WeChat Work config:
 
 #### Changelog
 
+* v1.3.2
+    * Add `DingTalk::from_token`
 * v1.3.1
     * Add `DingTalk::new_wechat`
 * v1.3.0
