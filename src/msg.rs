@@ -85,17 +85,17 @@ pub struct DingTalkMessageFeedCardLink {
 
 /// DingTalk message
 #[derive(Debug, Default)]
-pub struct DingTalkMessage<'a> {
+pub struct DingTalkMessage {
     pub message_type: DingTalkMessageType,
-    pub text_content: &'a str,
-    pub markdown_title: &'a str,
-    pub markdown_content: &'a str,
-    pub link_text: &'a str,
-    pub link_title: &'a str,
-    pub link_pic_url: &'a str,
-    pub link_message_url: &'a str,
-    pub action_card_title: &'a str,
-    pub action_card_text: &'a str,
+    pub text_content: String,
+    pub markdown_title: String,
+    pub markdown_content: String,
+    pub link_text: String,
+    pub link_title: String,
+    pub link_pic_url: String,
+    pub link_message_url: String,
+    pub action_card_title: String,
+    pub action_card_text: String,
     pub action_card_hide_avatar: DingTalkMessageActionCardHideAvatar,
     pub action_card_btn_orientation: DingTalkMessageActionCardBtnOrientation,
     pub action_card_single_btn: Option<DingTalkMessageActionCardBtn>,

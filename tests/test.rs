@@ -16,7 +16,7 @@ async fn _test_send() -> XResult<()> {
 
     dt.send_link("link title 001", "link content 001", "https://hatter.ink/favicon.png", "https://hatter.ink/").await?;
 
-    dt.send_message(&DingTalkMessage::new_feed_card()
+    dt.send_message(DingTalkMessage::new_feed_card()
         .add_feed_card_link(DingTalkMessageFeedCardLink{
             title: "test feed card title 001".into(),
             message_url: "https://hatter.ink/".into(),
@@ -29,14 +29,14 @@ async fn _test_send() -> XResult<()> {
         })
     ).await?;
 
-    dt.send_message(&DingTalkMessage::new_action_card("action card 001", "action card text 001")
+    dt.send_message(DingTalkMessage::new_action_card("action card 001", "action card text 001")
         .set_action_card_signle_btn(DingTalkMessageActionCardBtn{
             title: "test signle btn title".into(),
             action_url: "https://hatter.ink/".into(),
         })
     ).await?;
 
-    dt.send_message(&DingTalkMessage::new_action_card("action card 002", "action card text 002")
+    dt.send_message(DingTalkMessage::new_action_card("action card 002", "action card text 002")
         .add_action_card_btn(DingTalkMessageActionCardBtn{
             title: "test signle btn title 01".into(),
             action_url: "https://hatter.ink/".into(),

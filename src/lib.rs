@@ -37,46 +37,46 @@ const DEFAULT_WECHAT_WORK_ROBOT_URL: &str = "https://qyapi.weixin.qq.com/cgi-bin
 /// Document https://ding-doc.dingtalk.com/doc#/serverapi2/qf2nxq
 /// 
 /// Sample code:
-/// ```
+/// ```ignore
 /// let dt = DingTalk::new("<token>", "");
 /// dt.send_text("Hello world!")?;
 /// ```
 /// 
 /// At all sample:
-/// ```
+/// ```ignore
 /// dt.send_message(&DingTalkMessage::new_text("Hello World!").at_all())?;
 /// ```
 #[derive(Default)]
-pub struct DingTalk<'a> {
+pub struct DingTalk {
     pub dingtalk_type: DingTalkType,
-    pub default_webhook_url: &'a str,
-    pub access_token: &'a str,
-    pub sec_token: &'a str,
-    pub direct_url: &'a str,
+    pub default_webhook_url: String,
+    pub access_token: String,
+    pub sec_token: String,
+    pub direct_url: String,
 }
 
-impl <'a> DingTalkMessage<'a> {
+impl DingTalkMessage {
 
     /// New text DingTalk message
-    pub fn new_text(text_content: &'a str) -> Self {
+    pub fn new_text(text_content: &str) -> Self {
         Self::new(DingTalkMessageType::Text).text(text_content)
     }
 
     /// New markdown DingTalk message
-    pub fn new_markdown(markdown_title: &'a str, markdown_content: &'a str) -> Self {
+    pub fn new_markdown(markdown_title: &str, markdown_content: &str) -> Self {
         Self::new(DingTalkMessageType::Markdown).markdown(markdown_title, markdown_content)
     }
 
     /// New link DingTalk message
-    pub fn new_link(link_title: &'a str, link_text: &'a str, link_pic_url: &'a str, link_message_url: &'a str) -> Self {
+    pub fn new_link(link_title: &str, link_text: &str, link_pic_url: &str, link_message_url: &str) -> Self {
         Self::new(DingTalkMessageType::Link).link(link_title, link_text, link_pic_url, link_message_url)
     }
 
     /// New action card DingTalk message
-    pub fn new_action_card(title: &'a str, text: &'a str) -> Self {
+    pub fn new_action_card(title: &str, text: &str) -> Self {
         let mut s = Self::new(DingTalkMessageType::ActionCard);
-        s.action_card_title = title;
-        s.action_card_text = text;
+        s.action_card_title = title.into();
+        s.action_card_text = text.into();
         s
     }
 
@@ -94,24 +94,24 @@ impl <'a> DingTalkMessage<'a> {
     }
 
     /// Set text
-    pub fn text(mut self, text_content: &'a str) -> Self {
-        self.text_content = text_content;
+    pub fn text(mut self, text_content: &str) -> Self {
+        self.text_content = text_content.into();
         self
     }
 
     /// Set markdown
-    pub fn markdown(mut self, markdown_title: &'a str, markdown_content: &'a str) -> Self {
-        self.markdown_title = markdown_title;
-        self.markdown_content = markdown_content;
+    pub fn markdown(mut self, markdown_title: &str, markdown_content: &str) -> Self {
+        self.markdown_title = markdown_title.into();
+        self.markdown_content = markdown_content.into();
         self
     }
 
     /// Set link
-    pub fn link(mut self, link_title: &'a str, link_text: &'a str, link_pic_url: &'a str, link_message_url: &'a str) -> Self {
-        self.link_title = link_title;
-        self.link_text = link_text;
-        self.link_pic_url = link_pic_url;
-        self.link_message_url = link_message_url;
+    pub fn link(mut self, link_title: &str, link_text: &str, link_pic_url: &str, link_message_url: &str) -> Self {
+        self.link_title = link_title.into();
+        self.link_text = link_text.into();
+        self.link_pic_url = link_pic_url.into();
+        self.link_message_url = link_message_url.into();
         self
     }
 
@@ -158,7 +158,7 @@ impl <'a> DingTalkMessage<'a> {
     }
 
     /// Add feed card link detail
-    pub fn add_feed_card_link_detail(self, title: &'a str, message_url: &'a str, pic_url: &'a str) -> Self {
+    pub fn add_feed_card_link_detail(self, title: &str, message_url: &str, pic_url: &str) -> Self {
         self.add_feed_card_link(DingTalkMessageFeedCardLink {
             title: title.into(),
             message_url: message_url.into(),
@@ -181,7 +181,7 @@ impl <'a> DingTalkMessage<'a> {
     }
 }
 
-impl <'a> DingTalk<'a> {
+impl DingTalk {
 
     /// Create `DingTalk` from token:
     /// wechatwork:access_token
@@ -196,9 +196,9 @@ impl <'a> DingTalk<'a> {
             let sec_token = match token_and_or_sec_vec.next() {
                 Some(t) => t, None => "",
             };
-            Ok(Self::new(Self::string_to_a_str(access_token), Self::string_to_a_str(sec_token)))
+            Ok(Self::new(access_token, sec_token))
         } else if token.starts_with("wechatwork:") {
-            Ok(Self::new_wechat(Self::string_to_a_str(&token["wechatwork:".len()..])))
+            Ok(Self::new_wechat(&token["wechatwork:".len()..]))
         } else {
             Err(Box::new(Error::new(ErrorKind::Other, format!("Tokne format erorr: {}", token))))
         }
@@ -239,15 +239,15 @@ impl <'a> DingTalk<'a> {
             _ => DingTalkType::DingTalk,
         };
 
-        let default_webhook_url = Self::string_to_a_str(json_value["default_webhook_url"].as_str().unwrap_or_else(
+        let default_webhook_url = json_value["default_webhook_url"].as_str().unwrap_or_else(
             || match dingtalk_type {
                 DingTalkType::DingTalk => DEFAULT_DINGTALK_ROBOT_URL,
                 DingTalkType::WeChatWork => DEFAULT_WECHAT_WORK_ROBOT_URL,
             }
-        ));
-        let access_token = Self::string_to_a_str(json_value["access_token"].as_str().unwrap_or_default());
-        let sec_token = Self::string_to_a_str(json_value["sec_token"].as_str().unwrap_or_default());
-        let direct_url = Self::string_to_a_str(json_value["direct_url"].as_str().unwrap_or_default());
+        ).to_owned();
+        let access_token = json_value["access_token"].as_str().unwrap_or_default().to_owned();
+        let sec_token = json_value["sec_token"].as_str().unwrap_or_default().to_owned();
+        let direct_url = json_value["direct_url"].as_str().unwrap_or_default().to_owned();
         
         Ok(DingTalk {
             dingtalk_type,
@@ -259,72 +259,72 @@ impl <'a> DingTalk<'a> {
     }
 
     /// Create `DingTalk` from url, for outgoing robot
-    pub fn from_url(direct_url: &'a str) -> Self {
+    pub fn from_url(direct_url: &str) -> Self {
         DingTalk {
-            direct_url,
+            direct_url: direct_url.into(),
             ..Default::default()
         }
     }
 
     /// Create `DingTalk`
     /// `access_token` is access token, `sec_token` can be empty `""`
-    pub fn new(access_token: &'a str, sec_token: &'a str) -> Self {
+    pub fn new(access_token: &str, sec_token: &str) -> Self {
         DingTalk {
-            default_webhook_url: DEFAULT_DINGTALK_ROBOT_URL,
-            access_token,
-            sec_token,
+            default_webhook_url: DEFAULT_DINGTALK_ROBOT_URL.into(),
+            access_token: access_token.into(),
+            sec_token: sec_token.into(),
             ..Default::default()
         }
     }
 
     /// Create `DingTalk` for WeChat Work
-    pub fn new_wechat(key: &'a str) -> Self {
+    pub fn new_wechat(key: &str) -> Self {
         DingTalk {
-            default_webhook_url: DEFAULT_WECHAT_WORK_ROBOT_URL,
+            default_webhook_url: DEFAULT_WECHAT_WORK_ROBOT_URL.into(),
             dingtalk_type: DingTalkType::WeChatWork,
-            access_token: key,
+            access_token: key.into(),
             ..Default::default()
         }
     }
 
     /// Set default webhook url
-    pub fn set_default_webhook_url(&mut self, default_webhook_url: &'a str) {
-        self.default_webhook_url = default_webhook_url;
+    pub fn set_default_webhook_url(&mut self, default_webhook_url: &str) {
+        self.default_webhook_url = default_webhook_url.into();
     }
 
     /// Send DingTalk message
     /// 
     /// 1. Create DingTalk JSON message
     /// 2. POST JSON message to DingTalk server
-    pub async fn send_message(&self, dingtalk_message: &DingTalkMessage<'_>) -> XResult<()> {
+    pub async fn send_message(&self, dingtalk_message: DingTalkMessage) -> XResult<()> {
         let mut message_json = match dingtalk_message.message_type {
             DingTalkMessageType::Text => serde_json::to_value(InnerTextMessage {
                 msgtype: DingTalkMessageType::Text,
                 text: InnerTextMessageText {
-                    content: dingtalk_message.text_content.into(),
+                    content: dingtalk_message.text_content,
                 }
             }),
             DingTalkMessageType::Link => serde_json::to_value(InnerLinkMessage {
                 msgtype: DingTalkMessageType::Link,
                 link: InnerLinkMessageLink {
-                    title: dingtalk_message.link_title.into(),
-                    text: dingtalk_message.link_text.into(),
-                    pic_url: dingtalk_message.link_pic_url.into(),
-                    message_url: dingtalk_message.link_message_url.into(),
+                    title: dingtalk_message.link_title,
+                    text: dingtalk_message.link_text,
+                    pic_url: dingtalk_message.link_pic_url,
+                    message_url: dingtalk_message.link_message_url,
                 }
             }),
             DingTalkMessageType::Markdown => serde_json::to_value(InnerMarkdownMessage {
                 msgtype: DingTalkMessageType::Markdown,
                 markdown: InnerMarkdownMessageMarkdown {
-                    title: dingtalk_message.markdown_title.into(),
-                    text: dingtalk_message.markdown_content.into(),
+                    title: dingtalk_message.markdown_title,
+                    text: dingtalk_message.markdown_content,
                 }
             }),
             DingTalkMessageType::ActionCard => serde_json::to_value(InnerActionCardMessage {
                 msgtype: DingTalkMessageType::ActionCard,
                 action_card: InnerActionCardMessageActionCard {
-                    title: dingtalk_message.action_card_title.into(),
-                    text: dingtalk_message.action_card_text.into(),
+                    title: dingtalk_message.action_card_title,
+                    text: dingtalk_message.action_card_text,
                     hide_avatar: dingtalk_message.action_card_hide_avatar,
                     btn_orientation: dingtalk_message.action_card_btn_orientation,
                 }
@@ -381,17 +381,17 @@ impl <'a> DingTalk<'a> {
 
     /// Send text message
     pub async fn send_text(&self, text_message: &str) -> XResult<()> {
-        self.send_message(&DingTalkMessage::new_text(text_message)).await
+        self.send_message(DingTalkMessage::new_text(text_message)).await
     }
 
     /// Send markdown message
     pub async fn send_markdown(&self, title: &str, text: &str) -> XResult<()> {
-        self.send_message(&DingTalkMessage::new_markdown(title, text)).await
+        self.send_message(DingTalkMessage::new_markdown(title, text)).await
     }
 
     /// Send link message
-    pub async fn send_link(&self, link_title: &'a str, link_text: &'a str, link_pic_url: &'a str, link_message_url: &'a str) -> XResult<()> {
-        self.send_message(&DingTalkMessage::new_link(link_title, link_text, link_pic_url, link_message_url)).await
+    pub async fn send_link(&self, link_title: &str, link_text: &str, link_pic_url: &str, link_message_url: &str) -> XResult<()> {
+        self.send_message(DingTalkMessage::new_link(link_title, link_text, link_pic_url, link_message_url)).await
     }
 
     /// Direct send JSON message
@@ -401,8 +401,9 @@ impl <'a> DingTalk<'a> {
               .header(CONTENT_TYPE, APPLICATION_JSON_UTF8)
               .body(json_message.as_bytes().to_vec())
               .send().await {
-                  Ok(r) => r,
-                  Err(e) => return Err(Box::new(Error::new(ErrorKind::Other, format!("Unknown error: {}", e))) as Box<dyn std::error::Error>),
+                  Ok(r) => r, Err(e) => {
+                      return Err(Box::new(Error::new(ErrorKind::Other, format!("Unknown error: {}", e))) as Box<dyn std::error::Error>);
+                  },
               };
 
         match response.status().as_u16() {
@@ -414,10 +415,10 @@ impl <'a> DingTalk<'a> {
     /// Generate signed dingtalk webhook URL
     pub fn generate_signed_url(&self) -> XResult<String> {
         if !self.direct_url.is_empty() {
-            return Ok(self.direct_url.into());
+            return Ok(self.direct_url.clone());
         }
         let mut signed_url = String::with_capacity(1024);
-        signed_url.push_str(self.default_webhook_url);
+        signed_url.push_str(&self.default_webhook_url);
 
         if self.default_webhook_url.ends_with('?') {
             // Just Ok
@@ -433,7 +434,7 @@ impl <'a> DingTalk<'a> {
             DingTalkType::DingTalk => signed_url.push_str("access_token="),
             DingTalkType::WeChatWork => signed_url.push_str("key="),
         }
-        signed_url.push_str(&urlencoding::encode(self.access_token));
+        signed_url.push_str(&urlencoding::encode(&self.access_token));
 
         if !self.sec_token.is_empty() {
             let timestamp = &format!("{}", SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis());
@@ -448,18 +449,14 @@ impl <'a> DingTalk<'a> {
 
         Ok(signed_url)
     }
-
-    // SAFE? may these codes cause memory leak?
-    fn string_to_a_str(s: &str) -> &'a str {
-        Box::leak(s.to_owned().into_boxed_str())
-    }
 }
 
 /// calc hma_sha256 digest
 fn calc_hmac_sha256(key: &[u8], message: &[u8]) -> XResult<Vec<u8>> {
     let mut mac = match Hmac::<Sha256>::new_varkey(key) {
-        Ok(m) => m,
-        Err(e) => return Err(Box::new(Error::new(ErrorKind::Other, format!("Hmac error: {}", e))))
+        Ok(m) => m, Err(e) => {
+            return Err(Box::new(Error::new(ErrorKind::Other, format!("Hmac error: {}", e))));
+        },
     };
     mac.input(message);
     Ok(mac.result().code().to_vec())
