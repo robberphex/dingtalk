@@ -1,12 +1,11 @@
-use serde::{Serialize, Deserialize};
-
+use serde::{ Serialize, Deserialize };
 
 /// Send Dingtalk or WeChatWork message
 #[derive(Clone, Copy, Debug)]
 pub enum DingTalkType {
-
+    /// DingTalk
     DingTalk,
-
+    /// WeChatWork
     WeChatWork,
 }
 

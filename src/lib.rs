@@ -1,14 +1,13 @@
-use serde_json::Value;
-
 use std::{
     fs,
     env,
     path::PathBuf,
     time::SystemTime,
-    io::{Error, ErrorKind,},
+    io::{ Error, ErrorKind },
 };
+use serde_json::Value;
 use sha2::Sha256;
-use hmac::{Hmac, Mac,};
+use hmac::{ Hmac, Mac };
 
 mod msg;
 use msg::*;
