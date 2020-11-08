@@ -1,10 +1,4 @@
-use std::{
-    fs,
-    env,
-    path::PathBuf,
-    time::SystemTime,
-    io::{ Error, ErrorKind },
-};
+use std::{ fs, env, path::PathBuf, time::SystemTime, io::{ Error, ErrorKind } };
 use serde_json::Value;
 use sha2::Sha256;
 use hmac::{ Hmac, Mac };
@@ -198,6 +192,8 @@ impl DingTalk {
             Ok(Self::new(access_token, sec_token))
         } else if token.starts_with("wechatwork:") {
             Ok(Self::new_wechat(&token["wechatwork:".len()..]))
+        } else if token.starts_with("wecom:") {
+            Ok(Self::new_wechat(&token["wecom:".len()..]))
         } else {
             Err(Box::new(Error::new(ErrorKind::Other, format!("Tokne format erorr: {}", token))))
         }
@@ -234,7 +230,7 @@ impl DingTalk {
         }
         let type_str = json_value["type"].as_str().unwrap_or_default().to_lowercase();
         let dingtalk_type = match type_str.as_str() {
-            "wechat" | "wechatwork" => DingTalkType::WeChatWork,
+            "wechat" | "wechatwork" | "wecom" => DingTalkType::WeChatWork,
             _ => DingTalkType::DingTalk,
         };
 
